@@ -10,9 +10,9 @@ const orderService = {
    * @param {number} data.user_id
    * @param {number} data.food_id
    * @param {number} data.amount
-   * @param {string} data.code
+   * @param {string} data.code (ví dụ: ORD123).
    * @param {Array<number>} data.subIds (ví dụ: [1,2,3]).
-   * @returns Đơn hàng được tạo.
+   * @returns 
    */
   addOrder: async ({ user_id, food_id, amount, code, subIds }) => {
     if (!user_id || !food_id || !amount) {
