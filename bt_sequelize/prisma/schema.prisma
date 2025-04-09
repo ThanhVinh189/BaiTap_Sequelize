@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model food {
+  food_id     Int        @id @default(autoincrement())
+  food_name   String     @db.VarChar(255)
+  image       String?    @db.VarChar(255)
+  price       Decimal    @db.Decimal(10, 2)
+  description String?    @db.VarChar(255)
+  type_id     Int?
+  deletedBy   Int        @default(0)
+  isDeleted   Boolean    @default(false)
+  deletedAt   DateTime?  @db.Timestamp(0)
+  createdAt   DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime   @default(now()) @db.Timestamp(0)
+  food_type   food_type? @relation(fields: [type_id], references: [type_id], onDelete: Cascade, onUpdate: NoAction, map: "food_ibfk_1")
+  orders      orders[]
+  sub_food    sub_food[]
+
+  @@index([type_id], map: "type_id")
+}
+
+model food_type {
+  type_id   Int       @id @default(autoincrement())
+  type_name String    @db.VarChar(255)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  food      food[]
+}
+
+model like_res {
+  user_id    Int
+  res_id     Int
+  date_like  DateTime   @default(now()) @db.DateTime(0)
+  deletedBy  Int        @default(0)
+  isDeleted  Boolean    @default(false)
+  deletedAt  DateTime?  @db.Timestamp(0)
+  createdAt  DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime   @default(now()) @db.Timestamp(0)
+  users      users      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "like_res_ibfk_1")
+  restaurant restaurant @relation(fields: [res_id], references: [res_id], onDelete: Cascade, onUpdate: NoAction, map: "like_res_ibfk_2")
+
+  @@id([user_id, res_id])
+  @@index([res_id], map: "res_id")
+}
+
+model order_sub_food {
+  order_id  Int
+  sub_id    Int
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  orders    orders    @relation(fields: [order_id], references: [order_id], onDelete: Cascade, onUpdate: NoAction, map: "order_sub_food_ibfk_1")
+  sub_food  sub_food  @relation(fields: [sub_id], references: [sub_id], onDelete: Cascade, onUpdate: NoAction, map: "order_sub_food_ibfk_2")
+
+  @@id([order_id, sub_id])
+  @@index([sub_id], map: "sub_id")
+}
+
+model orders {
+  order_id       Int              @id @default(autoincrement())
+  user_id        Int?
+  food_id        Int?
+  amount         Int
+  code           String           @unique(map: "code") @db.VarChar(255)
+  order_date     DateTime         @default(now()) @db.DateTime(0)
+  deletedBy      Int              @default(0)
+  isDeleted      Boolean          @default(false)
+  deletedAt      DateTime?        @db.Timestamp(0)
+  createdAt      DateTime         @default(now()) @db.Timestamp(0)
+  updatedAt      DateTime         @default(now()) @db.Timestamp(0)
+  order_sub_food order_sub_food[]
+  users          users?           @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "orders_ibfk_1")
+  food           food?            @relation(fields: [food_id], references: [food_id], onDelete: Cascade, onUpdate: NoAction, map: "orders_ibfk_2")
+
+  @@index([food_id], map: "food_id")
+  @@index([user_id], map: "user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model rate_res {
+  user_id    Int
+  res_id     Int
+  amount     Int?
+  date_rate  DateTime   @default(now()) @db.DateTime(0)
+  deletedBy  Int        @default(0)
+  isDeleted  Boolean    @default(false)
+  deletedAt  DateTime?  @db.Timestamp(0)
+  createdAt  DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime   @default(now()) @db.Timestamp(0)
+  users      users      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "rate_res_ibfk_1")
+  restaurant restaurant @relation(fields: [res_id], references: [res_id], onDelete: Cascade, onUpdate: NoAction, map: "rate_res_ibfk_2")
+
+  @@id([user_id, res_id])
+  @@index([res_id], map: "res_id")
+}
+
+model restaurant {
+  res_id      Int        @id @default(autoincrement())
+  res_name    String     @db.VarChar(255)
+  image       String?    @db.VarChar(255)
+  description String?    @db.VarChar(255)
+  deletedBy   Int        @default(0)
+  isDeleted   Boolean    @default(false)
+  deletedAt   DateTime?  @db.Timestamp(0)
+  createdAt   DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime   @default(now()) @db.Timestamp(0)
+  like_res    like_res[]
+  rate_res    rate_res[]
+}
+
+model sub_food {
+  sub_id         Int              @id @default(autoincrement())
+  sub_name       String           @db.VarChar(255)
+  sub_price      Decimal          @db.Decimal(10, 2)
+  food_id        Int?
+  deletedBy      Int              @default(0)
+  isDeleted      Boolean          @default(false)
+  deletedAt      DateTime?        @db.Timestamp(0)
+  createdAt      DateTime         @default(now()) @db.Timestamp(0)
+  updatedAt      DateTime         @default(now()) @db.Timestamp(0)
+  order_sub_food order_sub_food[]
+  food           food?            @relation(fields: [food_id], references: [food_id], onDelete: Cascade, onUpdate: NoAction, map: "sub_food_ibfk_1")
+
+  @@index([food_id], map: "food_id")
+}
+
+model users {
+  user_id   Int        @id @default(autoincrement())
+  full_name String     @db.VarChar(255)
+  email     String     @unique(map: "email") @db.VarChar(255)
+  password  String     @db.VarChar(255)
+  deletedBy Int        @default(0)
+  isDeleted Boolean    @default(false)
+  deletedAt DateTime?  @db.Timestamp(0)
+  createdAt DateTime   @default(now()) @db.Timestamp(0)
+  updatedAt DateTime   @default(now()) @db.Timestamp(0)
+  like_res  like_res[]
+  orders    orders[]
+  rate_res  rate_res[]
+}
